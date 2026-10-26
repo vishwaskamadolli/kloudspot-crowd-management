@@ -1,24 +1,34 @@
 # Kloudspot Crowd Management
 
-Responsive React dashboard for authenticated crowd analytics and live Socket.IO updates.
+A responsive crowd-operations dashboard built for the Kloudspot frontend assessment. It combines authenticated historical analytics with real-time Socket.IO updates for site occupancy and alerts.
 
-## Requirements
+**Live application:** https://kloudspot-crowd-management.netlify.app/
 
-- Node.js 20+
-- npm
-- Valid Kloudspot user credentials
+## Features
 
-## Setup
+- JWT authentication, protected routes, logout, and automatic `401` handling
+- Site and timezone-aware date filtering
+- Footfall, dwell-time, occupancy, and gender analytics
+- Live site occupancy and deduplicated alerts through authenticated Socket.IO
+- Paginated entry/exit records with current-page search
+- Responsive navigation, charts, tables, skeletons, and error/empty/disconnected states
+- Real backend data only; no mock analytics
+
+## Tech stack
+
+React 18, TypeScript, Vite, Tailwind CSS, React Router, Recharts, Socket.IO Client, date-fns, and Lucide React.
+
+## Installation
+
+Requirements: Node.js 20+ and npm.
 
 ```bash
-npm install
-copy .env.example .env
-npm run dev
+git clone https://github.com/vishwaskamadolli/kloudspot-crowd-management.git
+cd kloudspot-crowd-management
+npm ci
 ```
 
-Open `http://localhost:5173`, sign in, and select a site. The app stores the returned JWT in browser storage and sends it as `Authorization: Bearer <token>` for protected API requests. Do not place credentials or JWTs in environment files.
-
-## Environment
+Copy `.env.example` to `.env`, then configure:
 
 ```env
 VITE_API_BASE_URL=https://hiring-dev.internal.kloudspot.com
@@ -27,22 +37,33 @@ VITE_SOCKET_ALERT_EVENT=alert
 VITE_SOCKET_SIM_EVENT=sim:event
 ```
 
-`VITE_SOCKET_URL` is optional and defaults to `VITE_API_BASE_URL`.
+`VITE_SOCKET_URL` is optional and defaults to `VITE_API_BASE_URL`. Never store credentials or JWTs in environment files.
 
-## Commands
+## Run locally
 
 ```bash
-npm run dev      # development server
-npm run build    # type-check and production build
-npm run preview  # preview production build
+npm run dev
 ```
 
-## Features
+Open `http://localhost:5173` and sign in with valid Kloudspot credentials.
 
-- JWT login, protected routes, logout, and automatic handling of unauthorized responses
-- Site selection and UTC epoch-millisecond date filters
-- Historical footfall, dwell, occupancy, demographics, and paginated crowd entries
-- Live site occupancy and deduplicated alerts over authenticated Socket.IO
-- Responsive navigation, cards, charts, tables, and loading/error/empty/disconnected states
+## Production build
 
-All displayed analytics come from the Kloudspot APIs or Socket.IO events; the project contains no mock analytics data.
+```bash
+npm run build
+npm run preview
+```
+
+Netlify uses `npm run build`, publishes `dist`, and applies the SPA fallback configured in `netlify.toml`.
+
+## API integration
+
+The app uses `https://hiring-dev.internal.kloudspot.com` by default:
+
+- `POST /api/auth/login` — returns the JWT used as `Authorization: Bearer <token>`
+- `GET /api/sites` — populates site filters and timezone metadata
+- `POST /api/analytics/footfall`, `/dwell`, `/occupancy`, `/demographics` — historical dashboard analytics
+- `POST /api/analytics/entry-exit` — server-paginated crowd records
+- Socket.IO `live_occupancy` and `alert` events — live KPI and alert updates filtered by site
+
+Analytics requests send `{ siteId, fromUtc, toUtc }`, with UTC epoch milliseconds derived from the selected site's timezone.
