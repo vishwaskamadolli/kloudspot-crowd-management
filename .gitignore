@@ -3,6 +3,7 @@ dist/
 .npm-cache/
 *.tsbuildinfo
 .env
+.env.example
 .env.local
 .env.*.local
 *.log
