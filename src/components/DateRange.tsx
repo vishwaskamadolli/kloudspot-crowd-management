@@ -1,0 +1,3 @@
+import { CalendarDays } from 'lucide-react';
+export type Range={from:string;to:string};
+export function DateRange({value,onChange}:{value:Range;onChange:(r:Range)=>void}){return <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-white p-1.5 shadow-sm"><CalendarDays className="ml-2 text-slate-400" size={17}/><input aria-label="From date" type="date" value={value.from} max={value.to} onChange={e=>onChange({...value,from:e.target.value})} className="rounded-lg px-2 py-1.5 text-sm focus-ring"/><span className="text-slate-300">—</span><input aria-label="To date" type="date" value={value.to} min={value.from} onChange={e=>onChange({...value,to:e.target.value})} className="rounded-lg px-2 py-1.5 text-sm focus-ring"/></div>}

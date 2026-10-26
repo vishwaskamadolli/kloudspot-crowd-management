@@ -1,0 +1,2 @@
+import type { Site } from '../types';
+export function SiteSelect({sites,value,onChange}:{sites:Site[];value:string;onChange:(siteId:string)=>void}){return <select aria-label="Site" value={value} onChange={event=>onChange(event.target.value)} className="focus-ring rounded-xl border bg-white px-3 py-2.5 text-sm font-medium shadow-sm">{sites.map(site=><option key={site.siteId} value={site.siteId}>{site.name} — {site.city}</option>)}</select>}

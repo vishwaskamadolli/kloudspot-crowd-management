@@ -1,0 +1,5 @@
+import { format } from 'date-fns';
+export const formatNumber=(v:number)=>new Intl.NumberFormat().format(v);
+export const formatTime=(v?:number)=>v?format(new Date(v),'dd MMM, hh:mm a'):'—';
+export const duration=(v?:number)=>v==null?'—':v<60?`${Math.round(v)}m`:`${Math.floor(v/60)}h ${Math.round(v%60)}m`;
+export function siteRangeToUtc(date:string,timeZone:string,end=false){const [year,month,day]=date.split('-').map(Number);const target=Date.UTC(year,month-1,day,end?23:0,end?59:0,end?59:0,end?999:0);let candidate=target;const formatter=new Intl.DateTimeFormat('en-US',{timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});for(let pass=0;pass<2;pass++){const parts=Object.fromEntries(formatter.formatToParts(new Date(candidate)).map(part=>[part.type,part.value]));const represented=Date.UTC(Number(parts.year),Number(parts.month)-1,Number(parts.day),Number(parts.hour),Number(parts.minute),Number(parts.second),end?999:0);candidate+=target-represented}return candidate}

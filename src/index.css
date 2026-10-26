@@ -1,0 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer base { *{@apply border-slate-200} body{@apply m-0 bg-canvas text-slate-900 antialiased;font-family:'DM Sans',sans-serif} button,input,select{@apply outline-none} }
+@layer components { .card{@apply rounded-2xl border bg-white shadow-card} .focus-ring{@apply focus:ring-2 focus:ring-brand/20 focus:border-brand} }

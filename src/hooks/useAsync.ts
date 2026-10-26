@@ -1,0 +1,2 @@
+import { useCallback,useEffect,useState,type DependencyList } from 'react';
+export function useAsync<T>(loader:()=>Promise<T>,deps:DependencyList){const [data,setData]=useState<T>();const [error,setError]=useState('');const [loading,setLoading]=useState(true);const run=useCallback(async()=>{setLoading(true);setError('');try{setData(await loader())}catch(e){setError(e instanceof Error?e.message:'Unable to load data')}finally{setLoading(false)}},deps);useEffect(()=>{void run()},[run]);return{data,error,loading,retry:run}}
