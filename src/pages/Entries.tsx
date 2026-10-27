@@ -96,7 +96,7 @@ export function Entries() {
             <b className="text-navy">{data?.total ?? 0}</b> entries
           </p>
         </div>
-        {sites.loading || loading ? (
+        {(sites.loading && !sites.data) || (loading && !data) ? (
             <EntriesSkeleton />
         ) : pageError ? (
           <ErrorState

@@ -1,6 +1,8 @@
 import type { CrowdEntry, Overview, Paginated, Site } from "../types";
 
 const env = import.meta.env;
+const inFlight = new Map<string, Promise<unknown>>();
+let sitesPromise: Promise<Site[]> | undefined;
 const required = (key: keyof ImportMetaEnv) => {
   const value = env[key];
   if (!value) throw new Error(`Missing configuration: ${key}`);
@@ -9,8 +11,14 @@ const required = (key: keyof ImportMetaEnv) => {
 const tokenKey = "kloudspot_access_token";
 export const authStore = {
   get: () => localStorage.getItem(tokenKey),
-  set: (token: string) => localStorage.setItem(tokenKey, token),
-  clear: () => localStorage.removeItem(tokenKey),
+  set: (token: string) => {
+    sitesPromise = undefined;
+    localStorage.setItem(tokenKey, token);
+  },
+  clear: () => {
+    sitesPromise = undefined;
+    localStorage.removeItem(tokenKey);
+  },
 };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -20,21 +28,32 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   headers.set("Content-Type", "application/json");
   const token = authStore.get();
   if (token) headers.set("Authorization", `Bearer ${token}`);
-  const response = await fetch(new URL(path, base), { ...init, headers });
-  if (response.status === 401) {
-    authStore.clear();
-    window.dispatchEvent(new Event("auth:unauthorized"));
+  const key = `${init?.method ?? "GET"}:${path}:${init?.body ?? ""}:${token ?? ""}`;
+  const pending = inFlight.get(key);
+  if (pending) return pending as Promise<T>;
+  const operation = (async () => {
+    const response = await fetch(new URL(path, base), { ...init, headers });
+    if (response.status === 401) {
+      authStore.clear();
+      window.dispatchEvent(new Event("auth:unauthorized"));
+    }
+    if (!response.ok) {
+      const error = (await response.json().catch(() => null)) as {
+        errorMessage?: string;
+        message?: string;
+      } | null;
+      throw new Error(
+        error?.errorMessage || error?.message || `Request failed (${response.status})`,
+      );
+    }
+    return response.json() as Promise<T>;
+  })();
+  inFlight.set(key, operation);
+  try {
+    return await operation;
+  } finally {
+    inFlight.delete(key);
   }
-  if (!response.ok) {
-    const error = (await response.json().catch(() => null)) as {
-      errorMessage?: string;
-      message?: string;
-    } | null;
-    throw new Error(
-      error?.errorMessage || error?.message || `Request failed (${response.status})`,
-    );
-  }
-  return response.json() as Promise<T>;
 }
 
 export async function login(email: string, password: string) {
@@ -64,7 +83,11 @@ const utcMillis = (value: number | string) => {
     return numeric > 0 && numeric < 1e12 ? numeric * 1000 : numeric;
   return typeof value === "string" ? Date.parse(value) : Number.NaN;
 };
-export const getSites = () => request<Site[]>("/api/sites");
+export const getSites = () =>
+  (sitesPromise ??= request<Site[]>("/api/sites").catch((error) => {
+    sitesPromise = undefined;
+    throw error;
+  }));
 export async function getOverview(
   siteId: string,
   fromUtc: number,

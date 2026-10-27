@@ -94,7 +94,7 @@ export function Dashboard() {
           <DateRange value={range} onChange={setRange} />
         </div>
       </header>
-      {sites.loading || loading ? (
+      {(sites.loading && !sites.data) || (loading && !data) ? (
         <DashboardSkeleton />
       ) : pageError ? (
         <div className="card">
